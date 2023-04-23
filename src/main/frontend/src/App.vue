@@ -4,7 +4,7 @@
     <button :class="loginPanelActive ? `buttonSelected` : ``"  @click="openLoginPanel()">Zaloguj</button>
     <button :class="!loginPanelActive ? `buttonSelected` : ``"  @click="openRegisterPanel()">Zarejestruj</button>
 
-    <div v-if="authenticatedUsername">
+    <div v-if="authenticatedUsername.length > 0">
       <UserPanel :username="authenticatedUsername" @logout="logMeOut()"></UserPanel>
       <MeetingsPage :username="authenticatedUsername"></MeetingsPage>
     </div>
@@ -39,9 +39,6 @@ export default {
     }
   },
   methods: {
-    logMeIn(user) {
-      this.authenticatedUsername = user.login;
-    },
     setError(p_error) {
       this.message = p_error;
       this.isError = true;
@@ -64,6 +61,7 @@ export default {
     },
     logMeOut() {
       this.authenticatedUsername = '';
+      delete axios.defaults.headers.common.Authorization;
     },
     registerUser(user) {
       axios.post('/api/participants', user)
@@ -78,9 +76,35 @@ export default {
               return;
             }
           }
+          this.setError("Nieoczekiwany błąd podczas rejestracji.");
           console.log("ERROR WHILE REGISTERING");
         });
-}
+    },
+    logMeIn(user) {
+      var app = this;
+      axios.post('/api/tokens', user)
+        .then(response => {
+            console.log("LOGGED IN SUCCESSFULLY");
+            app.hideMessage();
+            const token = response.data.token;
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+            app.authenticatedUsername = user.login;
+            // axios.get('meetings').then(response => console.log(response.data));
+            console.log(app.authenticatedUsername)
+            return;
+        })
+        .catch(response => {
+          if (response.response) {
+            if (response.response.status == 401) {
+              this.setError("Nie udało się zalogować");
+              return;
+            }
+            this.setError("Nieoczekiwany błąd podczas logowania.");
+            console.log("ERROR WHILE LOGGING IN");
+          }
+
+        });
+    },
   }
 }
 </script>
