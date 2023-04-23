@@ -1,17 +1,19 @@
 <template>
   <form @submit.prevent="enter()">
     <label>Login</label>
-    <input type="text" v-model="user.login">
+    <input type="text" @click="change()" v-model="user.login">
     <label>Hasło</label>
-    <input type="password" v-model="user.password">
-    <button type="submit">{{ buttonLabel || 'Zaloguj się' }}</button>
+    <input type="password" @click="change()" v-model="user.password">
+    <button style="margin-right: 20px;" type="submit">{{ buttonLabel }}</button>
+
   </form>
 </template>
 
 <script>
 export default {
   props: {
-    buttonLabel: String
+    buttonLabel: String,
+    eventName: String,
   },
   data() {
     return {
@@ -20,7 +22,10 @@ export default {
   },
   methods: {
     enter() {
-      this.$emit("login", this.user);
+      this.$emit(this.eventName, this.user);
+    },
+    change() {
+      this.$emit("hide")
     }
   }
 }
