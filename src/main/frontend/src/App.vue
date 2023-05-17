@@ -6,15 +6,15 @@
 
     <div v-if="authenticatedUsername.length > 0">
       <UserPanel :username="authenticatedUsername" @logout="logMeOut()"></UserPanel>
-      <MeetingsPage :username="authenticatedUsername"></MeetingsPage>
+      <MeetingsPage :username="authenticatedUsername" :user="user"></MeetingsPage>
     </div>
 
     <div v-else>
       <div v-if="message.length > 0" :class="isError ? `box error` : `box message`"> {{ message }}</div>
       <p v-if="loginPanelActive" class="title">Logowanie:</p>
       <p v-else class="title">Rejestracja:</p>
-      <LoginForm v-if="loginPanelActive" @login="(user) => logMeIn(user)" @hide ="hideMessage()" button-label='Zaloguj' event-name="login"></LoginForm>
-      <LoginForm v-else @register="(user) => registerUser(user)" @hide ="hideMessage()" button-label='Zarejestruj' event-name="register"></LoginForm>
+      <LoginForm v-if="loginPanelActive" @login="(user) => logMeInRequest(user)" @hide ="hideMessage()" button-label='Zaloguj' event-name="login"></LoginForm>
+      <LoginForm v-else @register="(user) => registerUserRequest(user)" @hide ="hideMessage()" button-label='Zarejestruj' event-name="register"></LoginForm>
     </div>
 
   </div>
@@ -36,6 +36,7 @@ export default {
       message: '',
       isError: false,
       timeoutId: null,
+      user: {},
     }
   },
   methods: {
@@ -63,10 +64,11 @@ export default {
       this.authenticatedUsername = '';
       delete axios.defaults.headers.common.Authorization;
     },
-    registerUser(user) {
+    registerUserRequest(user) {
+      
       axios.post('/api/participants', user)
         .then(response => {
-            console.log("REGISTERED SUCCESSFULLY");
+            console.log("[OK] REGISTERED SUCCESSFULLY");
             this.setMessage("Udało się zarejestrować.");
         })
         .catch(response => {
@@ -77,20 +79,19 @@ export default {
             }
           }
           this.setError("Nieoczekiwany błąd podczas rejestracji.");
-          console.log("ERROR WHILE REGISTERING");
+          console.log("[ERROR] REGISTERING");
         });
     },
-    logMeIn(user) {
+    logMeInRequest(user) {      
       var app = this;
       axios.post('/api/tokens', user)
         .then(response => {
-            console.log("LOGGED IN SUCCESSFULLY");
+            console.log("[OK] LOGGED IN SUCCESSFULLY");
             app.hideMessage();
             const token = response.data.token;
             axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-            app.authenticatedUsername = user.login;
-            // axios.get('meetings').then(response => console.log(response.data));
-            console.log(app.authenticatedUsername)
+            app.authenticatedUsername = user.login;           
+            this.user.login = user.login;
             return;
         })
         .catch(response => {
@@ -100,11 +101,11 @@ export default {
               return;
             }
             this.setError("Nieoczekiwany błąd podczas logowania.");
-            console.log("ERROR WHILE LOGGING IN");
+            console.log("[ERROR] LOG IN");
           }
 
         });
-    },
+    },    
   }
 }
 </script>
