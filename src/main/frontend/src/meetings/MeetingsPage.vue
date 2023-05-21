@@ -28,63 +28,74 @@ export default {
     };
   },
   methods: {
+    allMeetingRequest() {
+      axios.get('/api/meetings/all')
+        .then(response => {
+            console.log("[OK] GET ALL MEETINGS");  
+            this.meetings.length = [];            
+            let givenMeetings = response.data;           
+
+            for (let i = 0; i < givenMeetings.length; i++) {
+              console.log(givenMeetings[i])
+              this.meetings.push(givenMeetings[i])
+            }                      
+        })
+        .catch(response => {    
+          console.log("[OK] GET ALL MEETINGS");
+        });
+    },  
+
     addNewMeetingRequest(meeting) {
       axios.post('/api/meetings', meeting)
         .then(response => {
             console.log("[OK] ADD MEETING");
-            meeting.id = response.data.id;
-            this.addNewMeeting(meeting);            
+            this.allMeetingRequest();          
         })
         .catch(response => {    
           console.log("[ERROR] ADD MEETING");
         });
     },
-    addNewMeeting(meeting) {      
-      this.meetings.push(meeting);
-    },
+
     addMeetingParticipantRequest(meeting) {
       axios.post(`/api/meetings/${meeting.id}/participants`, this.user)
         .then(response => {
-            console.log(`[OK] ADD PARTICIPANT, MEETING ID:${meeting.id}`);            
-            this.addMeetingParticipant(meeting, this.user);            
+            console.log(`[OK] ADD PARTICIPANT, MEETING ID:${meeting.id}`);           
+            this.allMeetingRequest();      
             return;
         })
         .catch(response => {    
           console.log(`[ERROR] ADD PARTICIPANT, MEETING ID:${meeting.id}`);
         });      
     },
-    addMeetingParticipant(meeting, user) {
-      meeting.participants.push(user.login);
-    },
+
     removeMeetingParticipantRequest(meeting, user) {
       axios.delete(`/api/meetings/${meeting.id}/participants/${this.user.login}`)
         .then(response => {
             console.log(`[OK] DELETE PARTICIPANT, MEETING ID:${meeting.id}`);            
-            this.removeMeetingParticipant(meeting, this.user);            
+            this.allMeetingRequest();            
             return;
         })
         .catch(response => {    
           console.log(`[ERROR] ADELETE PARTICIPANT, MEETING ID:${meeting.id}`);
         }); 
     },
-    removeMeetingParticipant(meeting, user) {
-      meeting.participants.splice(meeting.participants.indexOf(user.login), 1);
-    },
+
     deleteMeetingRequest(meeting) {
       axios.delete(`/api/meetings/${meeting.id}`)
         .then(response => {
             console.log(`[OK] DELETE MEETING, MEETING ID:${meeting.id}`);            
-            this.meetings.splice(this.meetings.indexOf(meeting), 1);            
+            this.allMeetingRequest();            
             return;
         })
         .catch(response => {    
           console.log(`[ERROR] DELETE MEETING, MEETING ID:${meeting.id}`);
         }); 
-      
     },
-    deleteMeeting(meeting) {
-      this.meetings.splice(this.meetings.indexOf(meeting), 1);
-    },
-  }
+  },
+  mounted: function () {
+        this.$nextTick(function () {
+            this.allMeetingRequest();            
+        })
+  },
 }
 </script>

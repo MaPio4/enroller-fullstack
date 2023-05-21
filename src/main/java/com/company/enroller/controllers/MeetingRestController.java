@@ -36,6 +36,16 @@ public class MeetingRestController {
         return new ResponseEntity<Collection<Meeting>>(meetings, HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    public ResponseEntity<?> getMeeting() {
+        Collection<Meeting> meetings = meetingService.getAll();
+        if (meetings == null) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
+        meetings.stream().forEach(element -> System.out.println(element.getParticipants()));
+        return new ResponseEntity(meetings, HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public ResponseEntity<?> getMeeting(@PathVariable("id") long id) {
         Meeting meeting = meetingService.findById(id);
